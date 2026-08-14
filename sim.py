@@ -20,7 +20,7 @@ POPULATION_MAX = 15000  # Maximum population per sq km
 ROAD_CAPACITY_MIN = 40  # Minimum baseline road capacity (0-100 scale)
 ROAD_CAPACITY_MAX = 100 # Maximum baseline road capacity (0-100 scale)
 
-# Configure Pandas to display ALL rows and ALL columns without truncating
+# Configure Pandas to display ALL rows and columns without truncating
 pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 1000)
@@ -82,11 +82,13 @@ for week in range(1, NUM_WEEKS + 1):
         special_event = 0
         event_surge = 0.0
 
+        # Weeks 10-12: Festival/Event traffic surge in select zones
         if 10 <= week <= 12 and zone_id in ["Zone_03", "Zone_07", "Zone_12"]:
             special_event = 1
             event_surge = 18.0
             road_condition = "Moderate"
 
+        # Weeks 16-18: Monsoon / Heavy rain weather shock
         if 16 <= week <= 18:
             roll = np.random.rand()
             if roll < 0.45:
@@ -165,37 +167,36 @@ df = pd.DataFrame(records)
 
 
 # ==============================================================================
-# DISPLAY ALL DATA (EVERY SINGLE WEEK AND ZONE)
+# PRINT COMPLETE 20-WEEK TRACE FOR ALL 20 ZONES
 # ==============================================================================
-print("\n" + "=" * 110)
-print(" COMPLETE DATASET: ALL 20 WEEKS ACROSS ALL 20 ZONES (TOTAL 400 OBSERVATIONS) ".center(110, "="))
-print("=" * 110)
+print("\n" + "=" * 105)
+print(" COMPLETE 20-WEEK HISTORICAL TIMELINE TRACE FOR ALL 20 ZONES ".center(105, "="))
+print("=" * 105)
 
-# Print the complete 400-row table
-print(df.to_string(index=False))
-print("-" * 110)
+cols_to_print = [
+    "week", 
+    "vehicle_density", 
+    "congestion", 
+    "average_speed", 
+    "red_light_violations", 
+    "weather", 
+    "road_condition", 
+    "special_event", 
+    "incident_count", 
+    "incident_occurred"
+]
 
+for zone in zones:
+    z_id = zone["zone_id"]
+    archetype = zone["archetype"]
+    pop = zone["population_density"]
+    cap = zone["road_capacity"]
 
-# ==============================================================================
-# 20 x 20 PIVOT GRID (SEE ALL 20 WEEKS AT A GLANCE FOR EACH ZONE)
-# ==============================================================================
-print("\n" + "=" * 110)
-print(" VEHICLE DENSITY MATRIX (ALL 20 ZONES x ALL 20 WEEKS) ".center(110, "="))
-print("=" * 110)
-pivot_vehicles = df.pivot(index="zone_id", columns="week", values="vehicle_density")
-print(pivot_vehicles.to_string())
-
-print("\n" + "=" * 110)
-print(" CONGESTION MATRIX (ALL 20 ZONES x ALL 20 WEEKS) ".center(110, "="))
-print("=" * 110)
-pivot_congestion = df.pivot(index="zone_id", columns="week", values="congestion")
-print(pivot_congestion.to_string())
-
-print("\n" + "=" * 110)
-print(" INCIDENTS MATRIX (ALL 20 ZONES x ALL 20 WEEKS) [1 = Incident, 0 = No Incident] ".center(110, "="))
-print("=" * 110)
-pivot_incidents = df.pivot(index="zone_id", columns="week", values="incident_occurred")
-print(pivot_incidents.to_string())
+    print(f"\n[+] {z_id} | Archetype: {archetype:<19} | Population: {pop:>5,}/km² | Capacity: {cap:>3}")
+    print("-" * 105)
+    zone_df = df[df["zone_id"] == z_id][cols_to_print]
+    print(zone_df.to_string(index=False))
+    print("-" * 105)
 
 
 # ==============================================================================
@@ -206,6 +207,6 @@ os.makedirs(data_dir, exist_ok=True)
 output_file = os.path.join(data_dir, "traffic_simulation.csv")
 df.to_csv(output_file, index=False)
 
-print("\n" + "=" * 110)
-print(f" [+] Full 400-row dataset successfully saved to: {output_file} ".center(110, "="))
-print("=" * 110 + "\n")
+print("\n" + "=" * 105)
+print(f" [+] Full dataset (20 zones x 20 weeks = 400 rows) successfully saved to: {output_file} ".center(105, "="))
+print("=" * 105 + "\n")
